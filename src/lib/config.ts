@@ -3,10 +3,10 @@ import { z } from "zod";
 const ConfigSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1),
   WALLET_ADDRESS: z.string().min(32),
-  HELIUS_API_KEY: z.string().min(1),
   CHECK_INTERVAL_MS: z.coerce.number().default(15_000),
-  MAX_HEALTH_FACTOR_THRESHOLD: z.coerce.number().default(1.15),
-  MAX_DRAWDOWN_PCT: z.coerce.number().default(20),
+  WATCH_HEALTH_FACTOR_THRESHOLD: z.coerce.number().default(1.2),
+  WARNING_HEALTH_FACTOR_THRESHOLD: z.coerce.number().default(1.1),
+  CRITICAL_HEALTH_FACTOR_THRESHOLD: z.coerce.number().default(1.05),
   AUTO_EXIT: z.coerce.boolean().default(false),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });

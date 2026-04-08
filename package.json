@@ -2,6 +2,15 @@
   "name": "circuit",
   "version": "1.0.0",
   "description": "Automated DeFi circuit breaker. Monitors positions and triggers risk exits before liquidation.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CircuitSOL/Circuit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CircuitSOL/Circuit/issues"
+  },
+  "homepage": "https://github.com/CircuitSOL/Circuit#readme",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

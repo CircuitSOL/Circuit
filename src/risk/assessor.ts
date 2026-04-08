@@ -1,10 +1,11 @@
 import type { DeFiPosition, RiskAssessment, RiskLevel } from "../lib/types.js";
+import { loadConfig } from "../lib/config.js";
 
 function classifyRisk(hf: number, threshold: number): RiskLevel {
-  const distance = hf - threshold;
-  if (distance < 0.05) return "critical";
-  if (distance < 0.1) return "warning";
-  if (distance < 0.2) return "watch";
+  const config = loadConfig();
+  if (hf <= config.CRITICAL_HEALTH_FACTOR_THRESHOLD || hf <= threshold + 0.02) return "critical";
+  if (hf <= config.WARNING_HEALTH_FACTOR_THRESHOLD || hf <= threshold + 0.08) return "warning";
+  if (hf <= config.WATCH_HEALTH_FACTOR_THRESHOLD || hf <= threshold + 0.15) return "watch";
   return "safe";
 }
 

@@ -7,12 +7,14 @@ import { assessAll } from "../risk/assessor.js";
 import { printRiskBoard } from "../output/printer.js";
 import { logger } from "../lib/logger.js";
 
-const DEFAULT_RULES: CircuitBreakerRule[] = [
-  { id: "hf-critical",    name: "Health Factor Critical",    triggerCondition: "health_factor < threshold", action: "alert_only",        threshold: 1.05, enabled: true },
-  { id: "hf-warning",     name: "Health Factor Warning",     triggerCondition: "health_factor < threshold", action: "reduce_position",   threshold: 1.15, enabled: true },
-  { id: "drawdown-large", name: "Large Drawdown",            triggerCondition: "pnl_pct < -threshold",      action: "close_position",    threshold: 20,   enabled: false },
-  { id: "add-collateral", name: "Auto Add Collateral",       triggerCondition: "health_factor < threshold", action: "add_collateral",    threshold: 1.2,  enabled: false },
-];
+function getDefaultRules(config: Config): CircuitBreakerRule[] {
+  return [
+    { id: "hf-critical", name: "Health Factor Critical", triggerCondition: "health_factor < threshold", action: "alert_only", threshold: config.CRITICAL_HEALTH_FACTOR_THRESHOLD, enabled: true },
+    { id: "hf-warning", name: "Health Factor Warning", triggerCondition: "health_factor < threshold", action: "reduce_position", threshold: config.WARNING_HEALTH_FACTOR_THRESHOLD, enabled: true },
+    { id: "drawdown-large", name: "Large Drawdown", triggerCondition: "pnl_pct < -threshold", action: "close_position", threshold: 20, enabled: false },
+    { id: "add-collateral", name: "Auto Add Collateral", triggerCondition: "health_factor < threshold", action: "add_collateral", threshold: config.WATCH_HEALTH_FACTOR_THRESHOLD, enabled: false },
+  ];
+}
 
 const TOOLS: Anthropic.Tool[] = [
   {
@@ -46,6 +48,7 @@ const TOOLS: Anthropic.Tool[] = [
 
 export async function runAgentLoop(config: Config): Promise<void> {
   const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
+  const defaultRules = getDefaultRules(config);
 
   logger.info("Fetching DeFi positions...");
   const [kaminoPositions, marginFiPositions] = await Promise.all([
@@ -109,7 +112,7 @@ export async function runAgentLoop(config: Config): Promise<void> {
         assessments.length = 0; assessments.push(...fresh);
         result = JSON.stringify(assessments);
       } else if (block.name === "get_circuit_rules") {
-        result = JSON.stringify(DEFAULT_RULES);
+        result = JSON.stringify(defaultRules);
       } else if (block.name === "recommend_action") {
         const input = block.input as { position_id: string; risk_level: string };
         const pos = positions.find((p) => p.id.startsWith(input.position_id));
