@@ -13,15 +13,43 @@ Circuit watches health factors, scores risk in real time, and turns a drifting p
 
 ---
 
-Most Solana liquidations do not arrive out of nowhere. The position was deteriorating, the health factor kept narrowing, and nobody had a system translating that drift into a practical response. Circuit is built for that exact gap.
+Liquidations do not start at the liquidation line. They start when a position stops being comfortably safe and nobody has a system that treats that drift as operationally urgent.
 
-It monitors credit positions on supported protocols, classifies them into operational risk states, and escalates with the action that best matches the level of danger. That can mean alert-only mode, a reduce-position recommendation, or automatic exit behavior when the threshold is too dangerous to leave unattended.
+Circuit exists to make that slide impossible to ignore. It monitors Solana credit positions, maps them into explicit defense states, and tells the operator what the correct posture is before the position turns into a scramble.
 
-`FETCH -> ASSESS -> MATCH RULES -> ANALYZE -> ACT`
+`FETCH -> ASSESS -> CLASSIFY -> MATCH RULES -> RESPOND`
 
 ---
 
-Risk Dashboard - Circuit Breaker Rules - At a Glance - Operating Surfaces - Escalation Ladder - How It Works - Example Output - Risk Controls - Quick Start
+Risk Dashboard • Circuit Breaker Rules • Why Circuit Exists • Defense Posture • At a Glance • Escalation Ladder • How Operators Use Circuit • Example Output • Rule Design • Risk Controls • Quick Start
+
+## Risk Dashboard
+
+![Circuit Dashboard](assets/preview-dashboard.svg)
+
+## Circuit Breaker Rules
+
+![Circuit Rules](assets/preview-rules.svg)
+
+## Why Circuit Exists
+
+Most DeFi monitoring stacks are observational. They tell you what happened to the position. Circuit is built for the next question: what should happen now?
+
+That sounds simple until the wallet is real. One lending leg weakens faster than expected, another position is still technically fine, and the operator now has to decide whether to watch, reduce, close, or add collateral. If that logic lives only in someone's head, it usually fails under stress.
+
+Circuit moves that logic into a standing system. The point is not to maximize leverage. The point is to keep leveraged or borrowed exposure from drifting into forced behavior.
+
+## Defense Posture
+
+Circuit should feel less like a dashboard and more like a control layer.
+
+The product is useful when it does three things well:
+
+- turns position drift into a named risk state
+- maps each risk state to a clear response
+- separates cautionary alerts from situations where delay is actually dangerous
+
+That is why the repo is framed as a circuit breaker. A breaker is not there to predict every problem. It is there to stop a manageable problem from becoming a catastrophic one.
 
 ## At a Glance
 
@@ -30,60 +58,64 @@ Risk Dashboard - Circuit Breaker Rules - At a Glance - Operating Surfaces - Esca
 - `Primary failure mode`: watching health drift too late and reacting after liquidation risk is already urgent
 - `Best for`: operators managing lending exposure on Kamino and MarginFi who want structured escalation
 
-## Position Risk Dashboard
-
-![Circuit Dashboard](assets/preview-dashboard.svg)
-
-## Circuit Breaker Rules
-
-![Circuit Rules](assets/preview-rules.svg)
-
-## Operating Surfaces
-
-- `Risk Dashboard`: shows which positions are safe, degrading, or already near the edge
-- `Rule Engine`: maps health thresholds to actions such as alert-only, reduce, close, or add collateral
-- `Assessment Loop`: converts raw position data into a readable risk narrative
-- `Action Layer`: either prints the recommended action or executes it when auto-exit is enabled
-
-## Why Circuit Exists
-
-Solana lending positions degrade in a predictable way before they fail. The difficulty is not understanding liquidation math in theory. The difficulty is monitoring enough positions often enough to act before a manageable problem becomes a forced unwind.
-
-Circuit exists to turn that monitoring burden into an always-on defensive process. It is not a yield optimizer. It is not trying to squeeze more leverage out of a position. It is a control system for people who want to protect capital when credit conditions change quickly.
-
 ## The Escalation Ladder
 
-Circuit is built around a simple idea: every health state should map to a different operational posture.
+| Level | Health Factor | What it means operationally | Typical next move |
+|-------|---------------|-----------------------------|-------------------|
+| `SAFE` | above watch threshold | no active problem yet | monitor only |
+| `WATCH` | drifting weaker | situation deserves attention | review but do not overreact |
+| `WARNING` | deterioration is material | delay is becoming expensive | reduce debt or add collateral |
+| `CRITICAL` | liquidation risk is near | the position needs action now | close, repay, or auto-exit |
 
-| Level | Health Factor | Operational meaning |
-|-------|---------------|---------------------|
-| `SAFE` | above watch threshold | position is healthy, monitor only |
-| `WATCH` | drifting toward risk | alert with context, no immediate intervention |
-| `WARNING` | materially weaker | prepare to reduce debt or add collateral |
-| `CRITICAL` | close to liquidation | immediate action or automated exit path |
+The important thing is not the label itself. It is the fact that each label changes behavior.
 
-This ladder matters because a liquidation system should not treat every drift the same way. Early warnings and emergency states need different behavior.
+## How Operators Use Circuit
+
+### As A Live Defense Layer
+
+This is the most obvious use. The wallet is running real leverage, the operator wants early warnings, and the board needs to say when the correct answer changed from "watch this" to "do something now."
+
+### As A Policy Check
+
+Circuit is also useful before auto-exit is enabled. Teams often want the system to print the right action for a while before they trust it to take the action.
+
+### As A Credit Discipline Tool
+
+Even when no one is about to get liquidated, Circuit forces a useful question: are these thresholds and these position sizes still acceptable for the way the operator actually trades?
 
 ## How It Works
 
 Circuit runs a defense loop every cycle:
 
 1. pull the latest supported lending positions for the monitored wallet
-2. compute health, liquidation distance, and risk state
-3. compare each position against the configured breaker rules
-4. ask the agent to summarize what changed and what should be done next
-5. print or execute the highest-priority actions
+2. compute health, liquidation distance, and position-level risk
+3. compare the current state against the configured breaker thresholds
+4. summarize the position as an operational situation, not just a number
+5. print or execute the response that matches the actual danger level
 
-That sequence is intentionally operational. The output is not just "health factor 1.08." It is "reduce this debt now," "add collateral on this venue," or "keep watching because the position is still recoverable."
+The system should be judged on whether it creates the right response hierarchy. A good credit monitor is not one that shouts the loudest. It is the one that reacts correctly as the position weakens.
 
-## What A Strong Circuit Deployment Looks Like
+## Before You Enable Auto-Exit
 
-- positions are checked frequently enough that drift is caught before panic mode
-- the watch, warning, and critical thresholds reflect actual operator tolerance
-- auto-exit is reserved for the states where hesitation is more dangerous than action
-- the printed recommendation uses amounts and steps the operator can immediately follow
+Circuit does not need to be fully automated on day one to be valuable. In fact, most operators should start with alert-only mode and check whether the ladder matches how they already think about risk.
 
-If those pieces are missing, the system becomes another dashboard instead of a real breaker.
+Ask four questions before enabling automatic execution:
+
+1. are the health thresholds actually correct for this portfolio
+2. does the printed action match what the operator would do manually
+3. are the scanned venues the real sources of liquidation risk
+4. is the wallet comfortable with speed over discretion in critical states
+
+If those answers are weak, the right first step is still using Circuit as a standing advisor.
+
+## What A Strong Deployment Looks Like
+
+- positions are checked often enough that warning states are actually useful
+- the watch and warning levels are far enough apart to change behavior
+- the operator sees exact positions and exact next actions, not generic fear language
+- auto-exit is reserved for the states where hesitation is more dangerous than overreaction
+
+That is what makes the product believable to non-dev readers too. The value is obvious because the consequence is obvious.
 
 ## Example Output
 
@@ -101,15 +133,25 @@ recommended action:
 - or add fresh collateral within the next cycle
 ```
 
+## Rule Design
+
+Circuit is more useful when the rule design is explicit.
+
+- `watch threshold` should catch deterioration early enough to matter
+- `warning threshold` should represent a state where delay now has cost
+- `critical threshold` should mean the position is no longer safe to leave unattended
+- `auto-exit` should be reserved for operators who already trust the policy layer
+
+The point of rule design is not elegance. It is operational clarity under pressure.
+
 ## What Circuit Refuses To Pretend
 
-Circuit is useful because it is narrow about what it can defend.
-
 - it does not claim to cover protocols it is not actually scanning
-- it does not call a position safe just because it is not critical yet
-- it does not confuse passive monitoring with real liquidation defense
+- it does not call a position safe merely because it is not critical yet
+- it does not confuse generic notifications with liquidation defense
+- it does not assume the same health thresholds fit every wallet
 
-The goal is defensive clarity, not a broad but shallow credit abstraction.
+That honesty helps the repo read more like a product than a pitch deck.
 
 ## Risk Controls
 
@@ -142,6 +184,13 @@ CRITICAL_HEALTH_FACTOR_THRESHOLD=1.05
 AUTO_EXIT=false
 LOG_LEVEL=info
 ```
+
+## Support Docs
+
+- [Runbook](docs/runbook.md)
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
 
 ## License
 
