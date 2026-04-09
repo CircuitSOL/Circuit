@@ -1,4 +1,4 @@
-﻿name: CI
+name: Circuit CI
 
 on:
   push:
