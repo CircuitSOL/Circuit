@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+
+const TEST_ENV = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+
 const ConfigSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1),
   WALLET_ADDRESS: z.string().min(32),
@@ -14,7 +17,14 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export function loadConfig(): Config {
-  const result = ConfigSchema.safeParse(process.env);
+  const env = TEST_ENV
+    ? {
+        ANTHROPIC_API_KEY: "test-anthropic-key",
+        WALLET_ADDRESS: "TestWallet111111111111111111111111111111",
+        ...process.env,
+      }
+    : process.env;
+  const result = ConfigSchema.safeParse(env);
   if (!result.success) {
     console.error("Invalid configuration:", result.error.flatten().fieldErrors);
     process.exit(1);
