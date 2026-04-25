@@ -21,15 +21,7 @@ Circuit exists to make that slide impossible to ignore. It monitors Solana credi
 
 ---
 
-Risk Dashboard • Circuit Breaker Rules • Why Circuit Exists • Defense Posture • At a Glance • Escalation Ladder • How Operators Use Circuit • Example Output • Rule Design • Risk Controls • Quick Start
-
-## Risk Dashboard
-
-![Circuit Dashboard](assets/preview-dashboard.svg)
-
-## Circuit Breaker Rules
-
-![Circuit Rules](assets/preview-rules.svg)
+Why Circuit Exists • Defense Posture • At a Glance • Escalation Ladder • How Operators Use Circuit • Example Output • Rule Design • Risk Controls • Quick Start
 
 ## Why Circuit Exists
 
